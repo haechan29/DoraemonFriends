@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,8 +33,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.hc.doraemon_friends.Friend
-import com.hc.doraemon_friends.friends.jinGu
+import androidx.compose.ui.unit.sp
+import com.hc.doraemon_friends.Friends.friends
+import com.hc.doraemon_friends.Friends.jingu
 import com.hc.doraemon_friends.ui.theme.DoraemonFriendsTheme
 
 class MainActivity : ComponentActivity() {
@@ -52,15 +57,26 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun DoraemonFriends() {
-    FriendMultiLine()
+    val isShowingDetailState = remember { mutableStateOf(false) }
+    val detailFriendState = remember { mutableStateOf(jingu) }
+    if (isShowingDetailState.value) {
+        FriendDetail(detailFriendState.value)
+    } else {
+        FriendMultiLine(isShowingDetailState, detailFriendState)
+    }
 }
 
 @Composable
-fun FriendMultiLine() {
-    val friends = listOf(jinGu, jinGu, jinGu)
+fun FriendMultiLine(
+    isShowingDetailState: MutableState<Boolean>,
+    detailFriendState: MutableState<Friend>
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         for (i in friends.indices) {
-            FriendSingleLine(friends[i])
+            FriendSingleLine(
+                friends[i],
+                isShowingDetailState,
+                detailFriendState)
             if (i != friends.indices.last) {
                 Divider()
             }
@@ -69,11 +85,19 @@ fun FriendMultiLine() {
 }
 
 @Composable
-fun FriendSingleLine(friend: Friend) {
+fun FriendSingleLine(
+    friend: Friend,
+    isShowingDetailState: MutableState<Boolean>,
+    detailFriendState: MutableState<Friend>
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
+            .clickable {
+                isShowingDetailState.value = true
+                detailFriendState.value = friend
+            }
     ) {
         FriendImage(friend)
         Spacer(modifier = Modifier.width(10.dp))
@@ -105,6 +129,50 @@ fun FriendInfo(friend: Friend) {
         Spacer(modifier = Modifier.height(5.dp))
         Text(text = "소개: ${friend.description}")
     }
+}
+
+@Composable
+fun FriendDetail(friend: Friend) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)
+    ) {
+        FriendImageDetail(friend)
+        Spacer(modifier = Modifier.height(10.dp))
+        FriendInfoDetail(friend)
+    }
+}
+
+@Composable
+fun FriendImageDetail(friend: Friend) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+    ) {
+        Image(
+            modifier = Modifier.fillMaxSize(),
+            painter = painterResource(id = friend.imageResId),
+            contentDescription = null
+        )
+    }
+}
+
+@Composable
+fun FriendInfoDetail(friend: Friend) {
+    BodyText(text = "이름: ${friend.name}")
+    Spacer(modifier = Modifier.height(10.dp))
+    BodyText(text = "소개: ${friend.description}")
+}
+
+@Composable
+fun BodyText(text: String) {
+    Text(
+        text = text,
+        fontSize = 30.sp,
+        lineHeight = 40.sp
+    )
 }
 
 @Preview(showBackground = true)
