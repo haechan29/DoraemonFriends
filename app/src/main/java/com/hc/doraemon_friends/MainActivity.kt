@@ -2,7 +2,6 @@ package com.hc.doraemon_friends
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Animatable
@@ -34,9 +33,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.lerp
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
@@ -48,7 +47,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hc.doraemon_friends.Friends.doraemon
 import com.hc.doraemon_friends.Friends.friends
 import com.hc.doraemon_friends.Friends.jingu
 import com.hc.doraemon_friends.ui.theme.DoraemonFriendsTheme
@@ -192,7 +190,7 @@ fun FriendDetail(
         WithTransitionProgress(isShowingDetailState) { progress ->
             FriendImageDetail(friend, sharedElementParamsState, progress)
             Spacer(modifier = Modifier.height(10.dp))
-            FriendInfoDetail(friend)
+            FriendInfoDetail(friend, progress)
         }
     }
 }
@@ -241,15 +239,23 @@ fun FriendImageDetail(
 }
 
 @Composable
-fun FriendInfoDetail(friend: Friend) {
-    BodyText(text = "이름: ${friend.name}")
+fun FriendInfoDetail(friend: Friend, progress: Float) {
+    val alphaProgress = lerp(0.08f, 1f, progress)
+    BodyText(
+        modifier = Modifier.alpha(alphaProgress),
+        text = "이름: ${friend.name}"
+    )
     Spacer(modifier = Modifier.height(10.dp))
-    BodyText(text = "소개: ${friend.description}")
+    BodyText(
+        modifier = Modifier.alpha(alphaProgress),
+        text = "소개: ${friend.description}"
+    )
 }
 
 @Composable
-fun BodyText(text: String) {
+fun BodyText(modifier: Modifier = Modifier, text: String) {
     Text(
+        modifier = modifier,
         text = text,
         fontSize = 30.sp,
         lineHeight = 40.sp
@@ -299,6 +305,10 @@ fun lerp(initialSize: IntSize, targetSize: IntSize, value: Float): IntSize {
 
 fun lerp(initialValue: Int, targetValue: Int, value: Float): Int {
     return ((initialValue * (1 - value)) + targetValue * value).toInt()
+}
+
+fun lerp(initialValue: Float, targetValue: Float, value: Float): Float {
+    return (initialValue * (1 - value)) + targetValue * value
 }
 
 fun pxToDp(context: Context, px: Int): Dp {
