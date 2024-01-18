@@ -2,6 +2,7 @@ package com.hc.doraemon_friends
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Animatable
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,16 +41,16 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hc.doraemon_friends.Friends.doraemon
 import com.hc.doraemon_friends.Friends.friends
 import com.hc.doraemon_friends.Friends.jingu
-import com.hc.doraemon_friends.MainActivity.Companion.TARGET_OFFSET_Y
-import com.hc.doraemon_friends.MainActivity.Companion.TARGET_SIZE
 import com.hc.doraemon_friends.ui.theme.DoraemonFriendsTheme
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -67,11 +69,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    companion object {
-        const val TARGET_SIZE = 500
-        const val TARGET_OFFSET_Y = 100f
     }
 }
 
@@ -158,12 +155,12 @@ fun FriendImage(
         modifier = Modifier
             .width(80.dp)
             .aspectRatio(1f)
-            .background(color = Color(0xff51a1c4), shape = CircleShape)
-            .padding(5.dp)
+            .background(color = colorResource(id = R.color.doraemon), shape = CircleShape)
             .onGloballyPositioned { coordinates ->
                 setOffset(coordinates.positionInRoot())
                 setSize(coordinates.size)
-            },
+            }
+            .padding(5.dp),
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -188,7 +185,10 @@ fun FriendDetail(
     sharedElementParamsState: MutableState<SharedElementParams>,
     isShowingDetailState: MutableState<Boolean>
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
         WithTransitionProgress(isShowingDetailState) { progress ->
             FriendImageDetail(friend, sharedElementParamsState, progress)
             Spacer(modifier = Modifier.height(10.dp))
@@ -204,25 +204,32 @@ fun FriendImageDetail(
     progress: Float
 ) {
     val context = LocalContext.current
+    val screenWidth = getScreenWidth()
     val initialSize = sharedElementParamsState.value.initialSize
-    val targetSize = IntSize(TARGET_SIZE, TARGET_SIZE)
+    val targetSize = IntSize(screenWidth, screenWidth)
     val sizeProgress = lerp(initialSize, targetSize, progress)
     val initialOffset = sharedElementParamsState.value.initialOffset
-    val targetOffset = Offset((getScreenWidth() - targetSize.width) / 2f, TARGET_OFFSET_Y)
+    val targetOffset = Offset((screenWidth - targetSize.width) / 2f, 0f)
     val offsetProgress = lerp(initialOffset, targetOffset, progress)
+    val cornerSizeProgress = lerp(100, 0, progress).dp
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(pxToDp(context, TARGET_SIZE + TARGET_OFFSET_Y.toInt()))
+            .height(pxToDp(context, targetOffset.y.toInt() + targetSize.height))
+            .offset(
+                pxToDp(context, offsetProgress.x.toInt()),
+                pxToDp(context, offsetProgress.y.toInt())
+            )
     ) {
         Box(
             modifier = Modifier
                 .width(pxToDp(context, sizeProgress.width))
                 .aspectRatio(1f)
-                .offset(
-                    pxToDp(context, offsetProgress.x.toInt()),
-                    pxToDp(context, offsetProgress.y.toInt())
+                .background(
+                    color = colorResource(id = R.color.doraemon),
+                    shape = RoundedCornerShape(cornerSizeProgress)
                 )
+                .padding(10.dp)
         ) {
             Image(
                 modifier = Modifier.fillMaxSize(),
