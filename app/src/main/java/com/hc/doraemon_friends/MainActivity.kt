@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,26 +21,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.lerp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,7 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hc.doraemon_friends.Friends.friends
 import com.hc.doraemon_friends.Friends.jingu
+import com.hc.doraemon_friends.MainActivity.Companion.TARGET_OFFSET_Y
+import com.hc.doraemon_friends.MainActivity.Companion.TARGET_SIZE
 import com.hc.doraemon_friends.ui.theme.DoraemonFriendsTheme
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
@@ -66,6 +69,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    companion object {
+        const val TARGET_SIZE = 500
+        const val TARGET_OFFSET_Y = 100f
+    }
 }
 
 @Composable
@@ -77,7 +85,8 @@ fun DoraemonFriends() {
         if (isShowingDetailState.value) {
             FriendDetail(
                 detailFriendState.value,
-                sharedElementParamsState
+                sharedElementParamsState,
+                isShowingDetailState
             )
         } else {
             FriendMultiLine(
@@ -177,29 +186,53 @@ fun FriendInfo(friend: Friend) {
 }
 
 @Composable
-fun FriendDetail(friend: Friend, sharedElementParamsState: MutableState<SharedElementParams>) {
+fun FriendDetail(
+    friend: Friend,
+    sharedElementParamsState: MutableState<SharedElementParams>,
+    isShowingDetailState: MutableState<Boolean>
+) {
     Column(modifier = Modifier.fillMaxSize()) {
-        FriendImageDetail(friend, sharedElementParamsState)
-        Spacer(modifier = Modifier.height(10.dp))
-        FriendInfoDetail(friend)
+        WithTransitionProgress(isShowingDetailState) { progress ->
+            FriendImageDetail(friend, sharedElementParamsState, progress)
+            Spacer(modifier = Modifier.height(10.dp))
+            FriendInfoDetail(friend)
+        }
     }
 }
 
 @Composable
-fun FriendImageDetail(friend: Friend, sharedElementParamsState: MutableState<SharedElementParams>) {
-    val (x, y) = sharedElementParamsState.value.initialOffset
+fun FriendImageDetail(
+    friend: Friend,
+    sharedElementParamsState: MutableState<SharedElementParams>,
+    progress: Float
+) {
     val context = LocalContext.current
+    val initialSize = sharedElementParamsState.value.initialSize
+    val targetSize = IntSize(TARGET_SIZE, TARGET_SIZE)
+    val sizeProgress = lerp(initialSize, targetSize, progress)
+    val initialOffset = sharedElementParamsState.value.initialOffset
+    val targetOffset = Offset((getScreenWidth() - targetSize.width) / 2f, TARGET_OFFSET_Y)
+    val offsetProgress = lerp(initialOffset, targetOffset, progress)
     Box(
         modifier = Modifier
-            .width(pxToDp(context, sharedElementParamsState.value.initialSize.width))
-            .aspectRatio(1f)
-            .offset(pxToDp(context, x.toInt()), pxToDp(context, y.toInt()))
+            .fillMaxWidth()
+            .height(pxToDp(context, TARGET_SIZE + TARGET_OFFSET_Y.toInt()))
     ) {
-        Image(
-            modifier = Modifier.fillMaxSize(),
-            painter = painterResource(id = friend.imageResId),
-            contentDescription = null
-        )
+        Box(
+            modifier = Modifier
+                .width(pxToDp(context, sizeProgress.width))
+                .aspectRatio(1f)
+                .offset(
+                    pxToDp(context, offsetProgress.x.toInt()),
+                    pxToDp(context, offsetProgress.y.toInt())
+                )
+        ) {
+            Image(
+                modifier = Modifier.fillMaxSize(),
+                painter = painterResource(id = friend.imageResId),
+                contentDescription = null
+            )
+        }
     }
 }
 
@@ -225,6 +258,43 @@ fun DoraemonFriendsPreview() {
     DoraemonFriendsTheme {
         DoraemonFriends()
     }
+}
+
+@Composable
+fun getScreenWidth(): Int {
+    val configuration = LocalConfiguration.current
+    val context = LocalContext.current
+    return dpToPx(context, configuration.screenWidthDp.dp)
+}
+
+@Composable
+fun WithTransitionProgress(
+    isShowingDetailState: MutableState<Boolean>,
+    f: @Composable (Float) -> Unit
+) {
+    val transitionProgress = remember {
+        Animatable(if (isShowingDetailState.value) 0f else 1f)
+    }
+    LaunchedEffect(key1 = isShowingDetailState) {
+        launch {
+            transitionProgress.animateTo(
+                targetValue = if (isShowingDetailState.value) 1f else 0f,
+                animationSpec = tween(1000),
+            )
+        }
+    }
+    f(transitionProgress.value)
+}
+
+fun lerp(initialSize: IntSize, targetSize: IntSize, value: Float): IntSize {
+    return IntSize(
+        lerp(initialSize.width, targetSize.width, value),
+        lerp(initialSize.width, targetSize.width, value)
+    )
+}
+
+fun lerp(initialValue: Int, targetValue: Int, value: Float): Int {
+    return ((initialValue * (1 - value)) + targetValue * value).toInt()
 }
 
 fun pxToDp(context: Context, px: Int): Dp {
