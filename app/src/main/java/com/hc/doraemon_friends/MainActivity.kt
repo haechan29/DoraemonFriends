@@ -2,7 +2,6 @@ package com.hc.doraemon_friends
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Animatable
@@ -126,16 +125,23 @@ fun FriendSingleLine(
     detailFriendState: MutableState<Friend>,
     sharedElementParams: MutableState<SharedElementParams>
 ) {
+    var friendImageOffset = Offset.Unspecified
+    var friendImageSize = IntSize.Zero
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp)
+            .clickable {
+                isShowingDetailState.value = true
+                detailFriendState.value = friend
+                sharedElementParams.value.initialOffset = friendImageOffset
+                sharedElementParams.value.initialSize = friendImageSize
+            }
     ) {
         FriendImage(
             friend,
-            isShowingDetailState,
-            detailFriendState,
-            sharedElementParams
+            { offset: Offset -> friendImageOffset = offset },
+            { size: IntSize -> friendImageSize = size }
         )
         Spacer(modifier = Modifier.width(10.dp))
         FriendInfo(friend)
@@ -145,12 +151,9 @@ fun FriendSingleLine(
 @Composable
 fun FriendImage(
     friend: Friend,
-    isShowingDetailState: MutableState<Boolean>,
-    detailFriendState: MutableState<Friend>,
-    sharedElementParams: MutableState<SharedElementParams>
+    setOffset: (Offset) -> Unit,
+    setSize: (IntSize) -> Unit
 ) {
-    var offset = Offset.Unspecified
-    var size = IntSize.Zero
     Box(
         modifier = Modifier
             .width(80.dp)
@@ -158,14 +161,8 @@ fun FriendImage(
             .background(color = Color(0xff51a1c4), shape = CircleShape)
             .padding(5.dp)
             .onGloballyPositioned { coordinates ->
-                offset = coordinates.positionInRoot()
-                size = coordinates.size
-            }
-            .clickable {
-                isShowingDetailState.value = true
-                detailFriendState.value = friend
-                sharedElementParams.value.initialOffset = offset
-                sharedElementParams.value.initialSize = size
+                setOffset(coordinates.positionInRoot())
+                setSize(coordinates.size)
             },
         contentAlignment = Alignment.Center
     ) {
