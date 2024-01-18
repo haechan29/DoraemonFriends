@@ -34,9 +34,9 @@ __[해결]__ 부모에 적용되던 ScrollState을 앞 화면에만 적용함.</
 
 ### 3. 앞 화면을 클릭했을 때 앞 화면의 이미지를 투명하게 만들어야 하는 문제
 __[상황]__ 앞 화면을 클릭했을 때 앞 화면의 이미지가 확대되며 뒷 화면에 삽입되는데,</br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;보다 자연스럽게 보이기 위해서는 앞 화면의 이미지가 투명해져야 했음.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;보다 자연스럽게 보이기 위해서는 앞 화면의 이미지가 투명해져야 했음.</br>
 __[해결]__ 애니메이션 진행도를 나타내는 변수 ``progress``, 뒷 화면이 보이는 지를 나타내는 변수 ``isShowingDetail``를 이용하여 해결함. </br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;해결은 되었지만 제대로 한 것인지 잘 모르겠음. 추후 더 좋은 방법을 고민해봐야 할듯함.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;해결은 되었지만 제대로 한 것인지 잘 모르겠음. 추후 더 좋은 방법을 고민해봐야 할듯함.</br>
 
 
 
