@@ -24,7 +24,7 @@ __[상황]__ 앞 화면을 클릭하면 뒷 화면으로 이동하는데, 뒷 �
 
 <img src="https://github.com/haechan29/DoraemonFriends/assets/63138511/a97f6fec-d5d5-4348-a383-52594d466ecf" style="width:300px"></img>
 
-__[분석]__ 1. Scroll 값은 보이는 Root 뷰의 최상단으로부터 화면 최상단까지의 거리임.</br>
+__[분석]__ 1. Scroll 값은 Root 뷰의 최상단으로부터 보이는 화면 최상단까지의 거리임.</br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. LazyColumn에는 ``userScrollEnabled`` 속성이 있지만, Column에는 Scroll을 막는 별다른 방법이 없음.</br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 뒷 화면에 전달된 Scroll 값은 앞 화면의 Scroll 값과 정확히 일치함.</br>
 __[원인]__ 앞 화면에만 ScrollState을 적용해야 하는데, 앞 화면과 뒷 화면의 공통 부모에 ScrollState을 적용하고 있었음.</br>
